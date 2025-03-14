@@ -193,7 +193,13 @@ class WordFamily:
             raises NotImplementedError with the message: "< operator only valid
             for WordFamily comparisons." if `other` is not a WordFamily instance.
         """
-        return False
+        if not isinstance(other, WordFamily):
+            raise NotImplementedError("< operator only valid for WordFamily comparisons.")
+        if len(self.words) != len(other.words):
+            return len(self.words) < len(other.words)
+        if self.difficulty != other.difficulty:
+            return self.difficulty < other.difficulty
+        return self.feedback_colors > other.feedback_colors
 
     # DO NOT change this method.
     # You should use this for debugging!
@@ -335,7 +341,41 @@ def fast_sort(lst):
     post: Returns a new list that is sorted based on the items in lst.
 
     """
-    return lst[:]
+    if len(lst) <= 1:
+        return lst  # Base case, already sorted
+
+    mid = len(lst) // 2
+    left = fast_sort(lst[:mid])  # Sort left half
+    right = fast_sort(lst[mid:])  # Sort right half
+
+    return merge(left, right)
+
+def merge(left, right):
+    """
+    Merges two sorted lists into one sorted list.
+    """
+    result = []
+    left_index = 0
+    right_index = 0
+
+    while left_index < len(left) and right_index < len(right):
+        if left[left_index] < right[right_index]:  # Compare elements
+            result.append(left[left_index])
+            left_index += 1
+        else:
+            result.append(right[right_index])
+            right_index += 1
+
+    # If any elements are left, add them
+    while left_index < len(left):
+        result.append(left[left_index])
+        left_index += 1
+
+    while right_index < len(right):
+        result.append(right[right_index])
+        right_index += 1
+
+    return result
 
 
 # TODO: Modify this helper function. You may delete this comment when you are done.
@@ -357,9 +397,21 @@ def get_feedback_colors(secret_word, guessed_word):
     """
     feedback = [None] * NUM_LETTERS
 
-    # Modify this! This is just starter code.
+    secret_word_list = list(secret_word)
+    guessed_word_list = list(guessed_word)
+    # mark correct letters green (lst pass)
     for i in range(NUM_LETTERS):
-        feedback[i] = WRONG_SPOT_COLOR
+        if guessed_word_list[i] == secret_word_list[i]:
+            feedback[i] = CORRECT_COLOR
+            secret_word_list[i] = None
+    
+    # mark wrong spot letter yellow (2nd pass)
+    for i in range(NUM_LETTERS):
+        if feedback[i] == CORRECT_COLOR:
+            continue
+        if guessed_word_list[i] in secret_word_list:
+            feedback[i] = WRONG_SPOT_COLOR
+            secret_word_list[secret_word_list.index(guessed_word_list[i])] = None  # Mark as used
 
     # You do not have to change this return statement
     return feedback
@@ -386,9 +438,18 @@ def get_feedback(remaining_secret_words, guessed_word):
             3. Lexicographical ordering of the feedback (ASCII value comparisons)
     """
     # Modify this! This is just starter code.
-    feedback_colors = get_feedback_colors(remaining_secret_words[0], guessed_word)
-
-    return feedback_colors, remaining_secret_words
+    families = {}
+    for word in remaining_secret_words:
+        feedback = tuple(get_feedback_colors(word, guessed_word))
+        if feedback not in families:
+            families[feedback] = []
+        families[feedback].append(word)
+    
+    word_families = [WordFamily(feedback, words) for feedback, words in families.items()]
+    
+    hardest_family = fast_sort(word_families)[0]
+    
+    return hardest_family.feedback_colors, hardest_family.words
 
 
 # DO NOT modify this function.
