@@ -2,7 +2,7 @@
 Student information for this assignment:
 
 Replace <FULL NAME> with your name.
-On my/our honor, Aakanksha Mahajan and <FULL NAME>, this
+On my/our honor, Aakanksha Mahajan and Surabhi Arun, this
 programming assignment is my own work and I have not provided this code to
 any other student.
 
@@ -13,7 +13,7 @@ code to someone else), the case shall be submitted to the Office of the Dean of
 Students. Academic penalties up to and including an F in the course are likely.
 
 UT EID 1: am96292
-UT EID 2:
+UT EID 2: sa59594
 """
 
 import random
@@ -195,11 +195,14 @@ class WordFamily:
         """
         if not isinstance(other, WordFamily):
             raise NotImplementedError("< operator only valid for WordFamily comparisons.")
+    
         if len(self.words) != len(other.words):
-            return len(self.words) < len(other.words)
+            return len(self.words) > len(other.words)
+    
         if self.difficulty != other.difficulty:
-            return self.difficulty < other.difficulty
-        return self.feedback_colors > other.feedback_colors
+            return self.difficulty > other.difficulty
+    
+        return self.feedback_colors < other.feedback_colors
 
     # DO NOT change this method.
     # You should use this for debugging!
@@ -411,7 +414,11 @@ def get_feedback_colors(secret_word, guessed_word):
             continue
         if guessed_word_list[i] in secret_word_list:
             feedback[i] = WRONG_SPOT_COLOR
-            secret_word_list[secret_word_list.index(guessed_word_list[i])] = None  # Mark as used
+            secret_word_list[secret_word_list.index(guessed_word_list[i])] = None
+
+    for i in range(NUM_LETTERS):
+        if feedback[i] is None:
+            feedback[i] = NOT_IN_WORD_COLOR
 
     # You do not have to change this return statement
     return feedback
